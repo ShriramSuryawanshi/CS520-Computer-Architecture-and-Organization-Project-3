@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package examples;
+package implementation;
 
 import baseclasses.FunctionalUnitBase;
 import baseclasses.InstructionBase;
@@ -25,37 +25,41 @@ import voidtypes.VoidProperties;
  *
  * @author millerti
  */
-public class MultiStageFunctionalUnit extends FunctionalUnitBase {
-    public MultiStageFunctionalUnit(IModule parent, String name) {
+public class FloatMul extends FunctionalUnitBase {
+
+    public FloatMul(IModule parent, String name) {
         super(parent, name);
     }
 
     private static class MyMathUnit extends PipelineStageBase {
+
         public MyMathUnit(IModule parent) {
             // For simplicity, we just call this stage "in".
             super(parent, "in");
 //            super(parent, "in:Math");  // this would be fine too
         }
-        
+
         @Override
         public void compute(Latch input, Latch output) {
-            if (input.isNull()) return;
+            if (input.isNull()) {
+                return;
+            }
             doPostedForwarding(input);
             InstructionBase ins = input.getInstruction();
 
-            int source1 = ins.getSrc1().getValue();
-            int source2 = ins.getSrc2().getValue();
+            float source1 = ins.getSrc1().getFloatValue();
+            float source2 = ins.getSrc2().getFloatValue();
 
-            int result = source1 * source2;
-                        
-            output.setResultValue(result);
+            float result = source1 * source2;
+
+            output.setResultFloatValue(result);
             output.setInstruction(ins);
         }
     }
-    
+
     @Override
     public void createPipelineRegisters() {
-        createPipeReg("MathToDelay");  
+        createPipeReg("MathToDelay");
     }
 
     @Override
@@ -65,7 +69,7 @@ public class MultiStageFunctionalUnit extends FunctionalUnitBase {
 
     @Override
     public void createChildModules() {
-        IFunctionalUnit child = new MultiStageDelayUnit(this, "Delay", 3);
+        IFunctionalUnit child = new MultiStageDelayUnit(this, "Delay", 5);
         addChildUnit(child);
     }
 

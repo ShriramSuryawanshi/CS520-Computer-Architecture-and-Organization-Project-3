@@ -8,7 +8,6 @@ package implementation;
 import baseclasses.PipelineRegister;
 import baseclasses.PipelineStageBase;
 import baseclasses.CpuCore;
-import examples.MultiStageFunctionalUnit;
 import tools.InstructionSequence;
 import utilitytypes.IPipeReg;
 import utilitytypes.IPipeStage;
@@ -19,20 +18,21 @@ import voidtypes.VoidRegister;
 /**
  * This is an example of a class that builds a specific CPU simulator out of
  * pipeline stages and pipeline registers.
- * 
- * @author 
+ *
+ * @author
  */
 public class MyCpuCore extends CpuCore {
+
     static final String[] producer_props = {RESULT_VALUE};
-        
+
     public void initProperties() {
         properties = new GlobalData();
     }
-    
+
     public void loadProgram(InstructionSequence program) {
         getGlobals().loadProgram(program);
     }
-    
+
     public void runProgram() {
         properties.setProperty("running", true);
         while (properties.getPropertyBoolean("running")) {
@@ -44,9 +44,19 @@ public class MyCpuCore extends CpuCore {
     @Override
     public void createPipelineRegisters() {
         createPipeReg("FetchToDecode");
-        createPipeReg("DecodeToExecute");
-        createPipeReg("DecodeToMemory");
-        createPipeReg("DecodeToMSFU");
+        createPipeReg("DecodeToExecute");          
+
+        createPipeReg("DecodeToIntMul");              
+
+        createPipeReg("DecodeToIntDiv");                 // @shree - int div unit, 16 cycle DIV and MOD
+        createPipeReg("DecodeToFloatAddSub");               // @shree - floating point add/sub FADD, FSUB
+        createPipeReg("DecodeToFloatMul");              // @shree - floating point multiply FMUL
+        createPipeReg("DecodeToFloatDiv");               // @shree - floating point divide FDIV
+
+        createPipeReg("DecodeToMemory");          // @shree - memory, extend to 3 stages
+        
+        createPipeReg("IntDivToWriteback");
+        createPipeReg("FloatDivToWriteback");
         createPipeReg("ExecuteToWriteback");
         createPipeReg("MemoryToWriteback");
     }
@@ -56,6 +66,8 @@ public class MyCpuCore extends CpuCore {
         addPipeStage(new AllMyStages.Fetch(this));
         addPipeStage(new AllMyStages.Decode(this));
         addPipeStage(new AllMyStages.Execute(this));
+        addPipeStage(new IntDiv(this));
+        addPipeStage(new FloatDiv(this));
         addPipeStage(new AllMyStages.Memory(this));
         addPipeStage(new AllMyStages.Writeback(this));
     }
@@ -64,7 +76,11 @@ public class MyCpuCore extends CpuCore {
     public void createChildModules() {
         // MSFU is an example multistage functional unit.  Use this as a
         // basis for FMul, IMul, and FAddSub functional units.
-        addChildUnit(new MultiStageFunctionalUnit(this, "MSFU"));
+        addChildUnit(new IntMul(this, "IntMul"));
+
+        // @shree - adding child units for new stages        
+        addChildUnit(new FloatAddSub(this, "FloatAddSub"));
+        addChildUnit(new FloatMul(this, "FloatMul"));      
     }
 
     @Override
@@ -76,10 +92,10 @@ public class MyCpuCore extends CpuCore {
         // any of the compute units.
         // NOTE: Memory no longer connects to Execute.  It is now a fully 
         // independent functional unit, parallel to Execute.
-        
+
         // Connect two stages through a pipelin register
         connect("Fetch", "FetchToDecode", "Decode");
-        
+
         // Decode has multiple output registers, connecting to different
         // execute units.  
         // "MSFU" is an example multistage functional unit.  Those that
@@ -87,23 +103,38 @@ public class MyCpuCore extends CpuCore {
         // output register can be connected simply my naming the functional
         // unit.  The input to MSFU is really called "MSFU.in".
         connect("Decode", "DecodeToExecute", "Execute");
+        connect("Decode", "DecodeToIntMul", "IntMul");
+
+        //@shree - adding connections for new stages        
+        connect("Decode", "DecodeToIntDiv", "IntDiv");
+        connect("Decode", "DecodeToFloatAddSub", "FloatAddSub");
+        connect("Decode", "DecodeToFloatMul", "FloatMul");
+        connect("Decode", "DecodeToFloatDiv", "FloatDiv");
+
         connect("Decode", "DecodeToMemory", "Memory");
-        connect("Decode", "DecodeToMSFU", "MSFU");
-        
+
         // Writeback has multiple input connections from different execute
         // units.  The output from MSFU is really called "MSFU.Delay.out",
         // which was aliased to "MSFU.out" so that it would be automatically
         // identified as an output from MSFU.
-        connect("Execute","ExecuteToWriteback", "Writeback");
+        connect("Execute", "ExecuteToWriteback", "Writeback");
+        connect("IntDiv", "IntDivToWriteback", "Writeback");
+        connect("FloatAddSub", "Writeback");
+        connect("FloatMul", "Writeback");
+        connect("IntMul", "Writeback");
+        connect("FloatDiv","FloatDivToWriteback", "Writeback");
         connect("Memory", "MemoryToWriteback", "Writeback");
-        connect("MSFU", "Writeback");
+        
+
     }
 
     @Override
     public void specifyForwardingSources() {
         addForwardingSource("ExecuteToWriteback");
+        addForwardingSource("IntDivToWriteback");
+        addForwardingSource("FloatDivToWriteback");
         addForwardingSource("MemoryToWriteback");
-        
+
         // MSFU.specifyForwardingSources is where this forwarding source is added
         // addForwardingSource("MSFU.out");
     }
@@ -119,7 +150,7 @@ public class MyCpuCore extends CpuCore {
         // the starting point.
         return getPipeStage("Fetch");
     }
-    
+
     public MyCpuCore() {
         super(null, "core");
         initModule();

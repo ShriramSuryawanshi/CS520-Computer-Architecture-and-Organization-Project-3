@@ -35,6 +35,11 @@ public class GlobalData extends PropertiesContainer implements IGlobals {
     public static final int BRANCH_STATE_WAITING = 1;
     public static final int BRANCH_STATE_TAKEN = 2;
     public static final int BRANCH_STATE_NOT_TAKEN = 3;
+    
+    
+    // @shree - my variables
+    public static int MSID_cnt = 0;
+    public static int MSFD_cnt = 0;
 
 
     @Override
