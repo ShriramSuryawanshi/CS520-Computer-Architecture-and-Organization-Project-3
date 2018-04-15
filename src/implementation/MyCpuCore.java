@@ -44,9 +44,9 @@ public class MyCpuCore extends CpuCore {
     @Override
     public void createPipelineRegisters() {
         createPipeReg("FetchToDecode");
-        createPipeReg("DecodeToExecute");          
+        createPipeReg("DecodeToExecute");
 
-        createPipeReg("DecodeToIntMul");              
+        createPipeReg("DecodeToIntMul");
 
         createPipeReg("DecodeToIntDiv");                 // @shree - int div unit, 16 cycle DIV and MOD
         createPipeReg("DecodeToFloatAddSub");               // @shree - floating point add/sub FADD, FSUB
@@ -54,7 +54,7 @@ public class MyCpuCore extends CpuCore {
         createPipeReg("DecodeToFloatDiv");               // @shree - floating point divide FDIV
 
         createPipeReg("DecodeToMemory");          // @shree - memory, extend to 3 stages
-        
+
         createPipeReg("IntDivToWriteback");
         createPipeReg("FloatDivToWriteback");
         createPipeReg("ExecuteToWriteback");
@@ -68,7 +68,7 @@ public class MyCpuCore extends CpuCore {
         addPipeStage(new AllMyStages.Execute(this));
         addPipeStage(new IntDiv(this));
         addPipeStage(new FloatDiv(this));
-        addPipeStage(new AllMyStages.Memory(this));
+        //addPipeStage(new AllMyStages.Memory(this));
         addPipeStage(new AllMyStages.Writeback(this));
     }
 
@@ -80,7 +80,8 @@ public class MyCpuCore extends CpuCore {
 
         // @shree - adding child units for new stages        
         addChildUnit(new FloatAddSub(this, "FloatAddSub"));
-        addChildUnit(new FloatMul(this, "FloatMul"));      
+        addChildUnit(new FloatMul(this, "FloatMul"));
+        addChildUnit(new MemUnit(this, "MemUnit"));
     }
 
     @Override
@@ -111,7 +112,7 @@ public class MyCpuCore extends CpuCore {
         connect("Decode", "DecodeToFloatMul", "FloatMul");
         connect("Decode", "DecodeToFloatDiv", "FloatDiv");
 
-        connect("Decode", "DecodeToMemory", "Memory");
+        connect("Decode", "DecodeToMemory", "MemUnit");
 
         // Writeback has multiple input connections from different execute
         // units.  The output from MSFU is really called "MSFU.Delay.out",
@@ -122,9 +123,8 @@ public class MyCpuCore extends CpuCore {
         connect("FloatAddSub", "Writeback");
         connect("FloatMul", "Writeback");
         connect("IntMul", "Writeback");
-        connect("FloatDiv","FloatDivToWriteback", "Writeback");
-        connect("Memory", "MemoryToWriteback", "Writeback");
-        
+        connect("FloatDiv", "FloatDivToWriteback", "Writeback");
+        connect("MemUnit", "MemoryToWriteback", "Writeback");
 
     }
 
