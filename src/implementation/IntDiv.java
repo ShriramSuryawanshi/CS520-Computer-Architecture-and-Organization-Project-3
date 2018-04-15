@@ -70,7 +70,7 @@ public class IntDiv extends PipelineStageBase {
 
         if (GlobalData.MSID_cnt < 15) {
             GlobalData.MSID_cnt++;
-            setResourceWait("ResourceWait");
+            setResourceWait("Loop" + GlobalData.MSID_cnt);
         } else {
             GlobalData.MSID_cnt = 0;
         }

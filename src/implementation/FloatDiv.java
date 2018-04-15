@@ -55,13 +55,12 @@ public class FloatDiv extends PipelineStageBase {
 
         float source1 = ins.getSrc1().getFloatValue();
         float source2 = ins.getSrc2().getFloatValue();
-        
 
         float result = source1 / source2;
 
         if (GlobalData.MSFD_cnt < 15) {
             GlobalData.MSFD_cnt++;
-            setResourceWait("ResourceWait");
+            setResourceWait("Loop" + GlobalData.MSFD_cnt);
         } else {
             GlobalData.MSFD_cnt = 0;
         }
