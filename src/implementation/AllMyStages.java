@@ -387,7 +387,7 @@ public class AllMyStages {
             Latch output;
             int output_num;
             if (opcode == EnumOpcode.MUL) {
-                output_num = lookupOutput("DecodeToMSFU");
+                output_num = lookupOutput("DecodeToIntMul");
                 output = this.newOutput(output_num);
 
             } else if (opcode == EnumOpcode.DIV || opcode == EnumOpcode.MOD) {
@@ -520,7 +520,6 @@ public class AllMyStages {
     /**
      * * Memory Stage **
      */
-    /*
     static class Memory extends PipelineStageBase {
 
         public Memory(ICpuCore core) {
@@ -571,7 +570,7 @@ public class AllMyStages {
                     throw new RuntimeException("Non-memory instruction got into Memory stage");
             }
         }
-    } */
+    }
 
     /**
      * * Writeback Stage **

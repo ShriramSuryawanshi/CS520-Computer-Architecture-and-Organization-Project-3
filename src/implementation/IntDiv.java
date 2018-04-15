@@ -11,6 +11,7 @@ import baseclasses.Latch;
 import baseclasses.ModuleBase;
 import baseclasses.PipelineStageBase;
 import baseclasses.PropertiesContainer;
+import implementation.GlobalData;
 import java.util.Map;
 import tools.MultiStageDelayUnit;
 import tools.MyALU;

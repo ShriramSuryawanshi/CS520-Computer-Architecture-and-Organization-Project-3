@@ -12,6 +12,8 @@ import java.util.Set;
 import utilitytypes.IGlobals;
 import tools.InstructionSequence;
 import utilitytypes.IProperties;
+import static utilitytypes.IProperties.MAIN_MEMORY;
+import static utilitytypes.IProperties.PROGRAM_COUNTER;
 import utilitytypes.IRegFile;
 import utilitytypes.RegisterFile;
 
