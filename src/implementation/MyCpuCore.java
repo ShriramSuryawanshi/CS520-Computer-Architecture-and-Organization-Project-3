@@ -53,12 +53,12 @@ public class MyCpuCore extends CpuCore {
         createPipeReg("DecodeToFloatMul");              // @shree - floating point multiply FMUL
         createPipeReg("DecodeToFloatDiv");               // @shree - floating point divide FDIV
 
-        createPipeReg("DecodeToMemory");          // @shree - memory, extend to 3 stages
+        createPipeReg("DecodeToMemUnit");          
         
         createPipeReg("IntDivToWriteback");
         createPipeReg("FloatDivToWriteback");
         createPipeReg("ExecuteToWriteback");
-        createPipeReg("MemoryToWriteback");
+        createPipeReg("MemUnitToWriteback");
     }
 
     @Override
@@ -68,7 +68,7 @@ public class MyCpuCore extends CpuCore {
         addPipeStage(new AllMyStages.Execute(this));
         addPipeStage(new IntDiv(this));
         addPipeStage(new FloatDiv(this));
-        addPipeStage(new AllMyStages.Memory(this));
+        addPipeStage(new MemUnit.Addr(this));
         addPipeStage(new AllMyStages.Writeback(this));
     }
 
@@ -81,6 +81,9 @@ public class MyCpuCore extends CpuCore {
         // @shree - adding child units for new stages        
         addChildUnit(new FloatAddSub(this, "FloatAddSub"));
         addChildUnit(new FloatMul(this, "FloatMul"));      
+        
+        // @shree - adding child units for memory
+        addChildUnit(new MemUnit.Addr(this, "Addr"));
     }
 
     @Override
