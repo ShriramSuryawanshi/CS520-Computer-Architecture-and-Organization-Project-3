@@ -127,6 +127,8 @@ public class MyCpuCore extends CpuCore {
         addForwardingSource("ExecuteToWriteback");
         addForwardingSource("IntDivToWriteback");
         addForwardingSource("FloatDivToWriteback");
+        addForwardingSource("MemUnit.out");
+        
         //   addForwardingSource("MemoryToWriteback");
 
         // MSFU.specifyForwardingSources is where this forwarding source is added

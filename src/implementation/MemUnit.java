@@ -51,8 +51,8 @@ public class MemUnit extends FunctionalUnitBase {
             InstructionBase ins = input.getInstruction();
             setActivity(ins.toString());
 
-            Operand oper0 = ins.getOper0();
-            int oper0val = ins.getOper0().getValue();
+         //   Operand oper0 = ins.getOper0();
+           // int oper0val = ins.getOper0().getValue();
             int source1 = ins.getSrc1().getValue();
             int source2 = ins.getSrc2().getValue();
 
@@ -80,13 +80,13 @@ public class MemUnit extends FunctionalUnitBase {
                 return;
             }
 
-     //       doPostedForwarding(input);
+            doPostedForwarding(input);
             InstructionBase ins = input.getInstruction();
             setActivity(ins.toString());
+            addStatusWord("Addr=" + input.getResultValueAsString());
 
             output.setResultValue(input.getResultValue());
             output.setInstruction(input.getInstruction());
-
         }
     }
 
@@ -109,7 +109,6 @@ public class MemUnit extends FunctionalUnitBase {
 
             Operand oper0 = ins.getOper0();
             int oper0val = ins.getOper0().getValue();
-
             int addr = input.getResultValue();
 
             int value = 0;
