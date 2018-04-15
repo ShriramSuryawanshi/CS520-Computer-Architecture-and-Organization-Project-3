@@ -5,44 +5,41 @@
  */
 package implementation;
 
-import tools.MyALU;
-import utilitytypes.EnumOpcode;
-import baseclasses.InstructionBase;
-import baseclasses.PipelineRegister;
-import baseclasses.PipelineStageBase;
-import voidtypes.VoidLatch;
-import baseclasses.CpuCore;
 import baseclasses.FunctionalUnitBase;
+import baseclasses.InstructionBase;
 import baseclasses.Latch;
-import cpusimulator.CpuSimulator;
+import baseclasses.ModuleBase;
+import baseclasses.PipelineStageBase;
+import baseclasses.PropertiesContainer;
+import java.util.Map;
 import tools.MultiStageDelayUnit;
-import static utilitytypes.EnumOpcode.*;
-import utilitytypes.ICpuCore;
+import tools.MyALU;
 import utilitytypes.IFunctionalUnit;
 import utilitytypes.IGlobals;
 import utilitytypes.IModule;
 import utilitytypes.IPipeReg;
-import static utilitytypes.IProperties.*;
-import utilitytypes.IRegFile;
-import utilitytypes.Logger;
+import utilitytypes.IPipeStage;
+import utilitytypes.IProperties;
+import static utilitytypes.IProperties.MAIN_MEMORY;
 import utilitytypes.Operand;
-import voidtypes.VoidLabelTarget;
+import voidtypes.VoidProperties;
 
-
+/**
+ *
+ * @author millerti
+ */
 public class MemUnit extends FunctionalUnitBase {
 
     public MemUnit(IModule parent, String name) {
         super(parent, name);
     }
 
-    /**
-     * * Addr Stage **
-     */
-    static class Addr extends PipelineStageBase {
+    private static class Addr extends PipelineStageBase {
 
         public Addr(IModule parent) {
             // For simplicity, we just call this stage "in".
-            super(parent, "Addr");
+            super(parent, "in:Addr");
+//            super(parent, "in:Math");  // this would be fine too
         }
 
         @Override
@@ -50,7 +47,6 @@ public class MemUnit extends FunctionalUnitBase {
             if (input.isNull()) {
                 return;
             }
-
             doPostedForwarding(input);
             InstructionBase ins = input.getInstruction();
             setActivity(ins.toString());
@@ -70,11 +66,12 @@ public class MemUnit extends FunctionalUnitBase {
         }
     }
 
-    static class LSQ extends PipelineStageBase {
+    private static class LSQ extends PipelineStageBase {
 
         public LSQ(IModule parent) {
             // For simplicity, we just call this stage "in".
             super(parent, "LSQ");
+//            super(parent, "in:Math");  // this would be fine too
         }
 
         @Override
@@ -83,20 +80,22 @@ public class MemUnit extends FunctionalUnitBase {
                 return;
             }
 
-            doPostedForwarding(input);
+     //       doPostedForwarding(input);
             InstructionBase ins = input.getInstruction();
             setActivity(ins.toString());
 
             output.setResultValue(input.getResultValue());
             output.setInstruction(input.getInstruction());
+
         }
     }
 
-    static class DCache extends PipelineStageBase {
+    private static class DCache extends PipelineStageBase {
 
         public DCache(IModule parent) {
             // For simplicity, we just call this stage "in".
             super(parent, "DCache");
+//            super(parent, "in:Math");  // this would be fine too
         }
 
         @Override
@@ -104,12 +103,13 @@ public class MemUnit extends FunctionalUnitBase {
             if (input.isNull()) {
                 return;
             }
-
             doPostedForwarding(input);
             InstructionBase ins = input.getInstruction();
             setActivity(ins.toString());
 
+            Operand oper0 = ins.getOper0();
             int oper0val = ins.getOper0().getValue();
+
             int addr = input.getResultValue();
 
             int value = 0;
@@ -143,35 +143,32 @@ public class MemUnit extends FunctionalUnitBase {
     public void createPipelineRegisters() {
         createPipeReg("AddrToLSQ");
         createPipeReg("LSQToDCache");
+        createPipeReg("out");
     }
 
     @Override
     public void createPipelineStages() {
-        addPipeStage(new MemUnit.Addr(this));
-        addPipeStage(new MemUnit.LSQ(this));
-        addPipeStage(new MemUnit.DCache(this));
+        addPipeStage(new Addr(this));
+        addPipeStage(new LSQ(this));
+        addPipeStage(new DCache(this));
     }
 
     @Override
     public void createChildModules() {
-        // @shree - nothing yet
-        
-//        addChildUnit(new MemUnit(this, "Addr"));
-//        addChildUnit(new MemUnit(this, "LSQ"));
-//        addChildUnit(new MemUnit(this, "DCache"));
+        //IFunctionalUnit child = new MultiStageDelayUnit(this, "Delay", 1);                      
+        //addChildUnit(child);
     }
 
     @Override
     public void createConnections() {
-//        addRegAlias("DCache.out", "out");
-        connect("Addr", "AddrToLSQ", "LSQ");
+        //addRegAlias("Delay.out", "out");
+        connect("in:Addr", "AddrToLSQ", "LSQ");
         connect("LSQ", "LSQToDCache", "DCache");
-        connect("LSQToDCache", "out");
+        connect("DCache", "out");
     }
 
     @Override
     public void specifyForwardingSources() {
         addForwardingSource("out");
     }
-
 }

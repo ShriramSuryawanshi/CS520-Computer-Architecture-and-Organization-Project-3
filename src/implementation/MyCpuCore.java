@@ -45,20 +45,16 @@ public class MyCpuCore extends CpuCore {
     public void createPipelineRegisters() {
         createPipeReg("FetchToDecode");
         createPipeReg("DecodeToExecute");
-
+        createPipeReg("DecodeToMemory");
         createPipeReg("DecodeToIntMul");
-
-        createPipeReg("DecodeToIntDiv");                 // @shree - int div unit, 16 cycle DIV and MOD
-        createPipeReg("DecodeToFloatAddSub");               // @shree - floating point add/sub FADD, FSUB
-        createPipeReg("DecodeToFloatMul");              // @shree - floating point multiply FMUL
-        createPipeReg("DecodeToFloatDiv");               // @shree - floating point divide FDIV
-
-        createPipeReg("DecodeToMemory");          // @shree - memory, extend to 3 stages
-
-        createPipeReg("IntDivToWriteback");
-        createPipeReg("FloatDivToWriteback");
+        createPipeReg("DecodeToFloatAddSub");
+        createPipeReg("DecodeToFloatDiv");
+        createPipeReg("DecodeToFloatMul");
+        createPipeReg("DecodeToIntDiv");
         createPipeReg("ExecuteToWriteback");
-        createPipeReg("MemoryToWriteback");
+        createPipeReg("FloatDivToWriteback");
+        createPipeReg("IntDivToWriteback");
+        // createPipeReg("MemoryToWriteback");
     }
 
     @Override
@@ -66,9 +62,9 @@ public class MyCpuCore extends CpuCore {
         addPipeStage(new AllMyStages.Fetch(this));
         addPipeStage(new AllMyStages.Decode(this));
         addPipeStage(new AllMyStages.Execute(this));
-        addPipeStage(new IntDiv(this));
         addPipeStage(new FloatDiv(this));
-        //addPipeStage(new AllMyStages.Memory(this));
+        addPipeStage(new IntDiv(this));
+        //  addPipeStage(new AllMyStages.Memory(this));
         addPipeStage(new AllMyStages.Writeback(this));
     }
 
@@ -76,12 +72,12 @@ public class MyCpuCore extends CpuCore {
     public void createChildModules() {
         // MSFU is an example multistage functional unit.  Use this as a
         // basis for FMul, IMul, and FAddSub functional units.
-        addChildUnit(new IntMul(this, "IntMul"));
 
-        // @shree - adding child units for new stages        
+        addChildUnit(new IntMul(this, "IntMul"));
         addChildUnit(new FloatAddSub(this, "FloatAddSub"));
         addChildUnit(new FloatMul(this, "FloatMul"));
         addChildUnit(new MemUnit(this, "MemUnit"));
+
     }
 
     @Override
@@ -104,15 +100,14 @@ public class MyCpuCore extends CpuCore {
         // output register can be connected simply my naming the functional
         // unit.  The input to MSFU is really called "MSFU.in".
         connect("Decode", "DecodeToExecute", "Execute");
+        connect("Decode", "DecodeToMemory", "MemUnit");
         connect("Decode", "DecodeToIntMul", "IntMul");
 
         //@shree - adding connections for new stages        
-        connect("Decode", "DecodeToIntDiv", "IntDiv");
+        connect("Decode", "DecodeToIntDiv", "IntDiv");        
         connect("Decode", "DecodeToFloatAddSub", "FloatAddSub");
         connect("Decode", "DecodeToFloatMul", "FloatMul");
         connect("Decode", "DecodeToFloatDiv", "FloatDiv");
-
-        connect("Decode", "DecodeToMemory", "MemUnit");
 
         // Writeback has multiple input connections from different execute
         // units.  The output from MSFU is really called "MSFU.Delay.out",
@@ -120,12 +115,11 @@ public class MyCpuCore extends CpuCore {
         // identified as an output from MSFU.
         connect("Execute", "ExecuteToWriteback", "Writeback");
         connect("IntDiv", "IntDivToWriteback", "Writeback");
+        connect("FloatDiv", "FloatDivToWriteback", "Writeback");
         connect("FloatAddSub", "Writeback");
         connect("FloatMul", "Writeback");
         connect("IntMul", "Writeback");
-        connect("FloatDiv", "FloatDivToWriteback", "Writeback");
-        connect("MemUnit", "MemoryToWriteback", "Writeback");
-
+        connect("MemUnit", "Writeback");
     }
 
     @Override
@@ -133,7 +127,7 @@ public class MyCpuCore extends CpuCore {
         addForwardingSource("ExecuteToWriteback");
         addForwardingSource("IntDivToWriteback");
         addForwardingSource("FloatDivToWriteback");
-        addForwardingSource("MemoryToWriteback");
+        //   addForwardingSource("MemoryToWriteback");
 
         // MSFU.specifyForwardingSources is where this forwarding source is added
         // addForwardingSource("MSFU.out");
