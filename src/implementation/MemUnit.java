@@ -62,8 +62,9 @@ public class MemUnit extends FunctionalUnitBase {
             // address calculation here.
             int addr = source1 + source2;
             
-            ins.getSrc1().setIntValue(addr);
-           
+            //ins.getSrc1().setIntValue(addr);
+            
+            output.setProperty("address", addr);           
             output.setInstruction(ins);
         }
     }
@@ -86,7 +87,7 @@ public class MemUnit extends FunctionalUnitBase {
             InstructionBase ins = input.getInstruction();
             setActivity(ins.toString());
             int addr = ins.getSrc1().getValue();
-            addStatusWord("Addr=" + addr);
+            this.addStatusWord("Addr=" + input.getPropertyInteger("address"));
 
             //   output.setResultValue(input.getResultValue());
             output.setInstruction(input.getInstruction());
@@ -125,14 +126,14 @@ public class MemUnit extends FunctionalUnitBase {
                     value = memory[addr];
                     output.setResultValue(value);
                     output.setInstruction(ins);
-                    addStatusWord("Mem[" + addr + "]");
+                    addStatusWord(oper0.getRegisterName() + "=Mem[" + addr + "]");
                     break;
                 
                 case STORE:
                     // For store, the value to be stored in main memory is
                     // in oper0, which was fetched in Decode.
                     memory[addr] = oper0val;
-                    addStatusWord("Mem[" + addr + "]=" + ins.getOper0().getValueAsString());
+                    addStatusWord("Mem[" + addr + "]=" + oper0.getValueAsString());
                     return;
                 
                 default:
